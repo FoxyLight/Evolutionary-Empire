@@ -10,13 +10,13 @@ type GameState = {
 }
 
 const INITIAL_STATE: GameState = {
-  biomass: 0,
+  biomass: 5,
   population: 1,
   mutations: 0,
   mutationLevel: 0,
 }
 
-const mutationCost = (level: number) => Math.floor(10 * Math.pow(1.35, level))
+const mutationCost = (level: number) => Math.floor(8 * Math.pow(1.3, level))
 
 function App() {
   const [game, setGame] = useState<GameState>(() => {
@@ -26,14 +26,19 @@ function App() {
 
   useEffect(() => {
     const interval = window.setInterval(() => {
-      setGame((current) => ({
-        ...current,
-        biomass: current.biomass + 0.25 * (1 + current.mutationLevel * 0.1),
-        population: Math.min(
-          current.population + 0.02 * (1 + current.mutationLevel * 0.05),
-          1_000_000,
-        ),
-      }))
+      setGame((current) => {
+        const productionMultiplier = 1 + current.mutationLevel * 0.15
+        const populationMultiplier = 1 + current.mutationLevel * 0.08
+
+        return {
+          ...current,
+          biomass: current.biomass + 0.375 * productionMultiplier,
+          population: Math.min(
+            current.population + 0.02 * populationMultiplier,
+            1_000_000,
+          ),
+        }
+      })
     }, 250)
 
     return () => window.clearInterval(interval)
@@ -44,6 +49,7 @@ function App() {
   }, [game])
 
   const nextMutationCost = useMemo(() => mutationCost(game.mutationLevel), [game.mutationLevel])
+  const biomassPerSecond = 1.5 * (1 + game.mutationLevel * 0.15)
 
   const buyMutation = () => {
     if (game.biomass < nextMutationCost) return
@@ -74,7 +80,7 @@ function App() {
         <article className="stat-card">
           <span>Biomass</span>
           <strong>{game.biomass.toFixed(1)}</strong>
-          <small>+{(1 + game.mutationLevel * 0.1).toFixed(1)} / second</small>
+          <small>+{biomassPerSecond.toFixed(1)} / second</small>
         </article>
         <article className="stat-card">
           <span>Population</span>
